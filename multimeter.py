@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Source, Inspiration: https://www.pyimagesearch.com/2017/02/13/recognizing-digits-with-opencv-and-python/
+# Inspired by: https://www.pyimagesearch.com/2017/02/13/recognizing-digits-with-opencv-and-python/
 
 from os import linesep
 from imutils.perspective import four_point_transform
@@ -9,7 +9,7 @@ import imutils
 import cv2
 import logging as log
 import sys
-import math
+#import math
 from pprint import pformat
 import numpy as np
 from numpy.core.fromnumeric import mean
@@ -59,8 +59,7 @@ log.info("FPS: {}".format(int(captureDevice.get(cv2.CAP_PROP_FPS))))
 log.debug("Focus mode: {}".format(captureDevice.get(cv2.CAP_PROP_AUTOFOCUS)))
 log.debug("Focus value: {}".format(captureDevice.get(cv2.CAP_PROP_FOCUS)))
 
-# define the dictionary of digit segments so we can identify
-# each digit on the thermostat
+# 7 segment digit positions
 DIGITS_LOOKUP = {
     (1, 1, 1, 0, 1, 1, 1): 0,
     (0, 0, 1, 0, 0, 1, 0): 1,
@@ -142,7 +141,7 @@ def freqFilter(image, radius):
     superblurred = cv2.GaussianBlur(image, (ks, ks), 0)
     return cv2.normalize((image/2.0 - superblurred/2.0), 0, 255, cv2.NORM_MINMAX)
 
-
+# print coordinates clicked on, to help build DIGIT_POS
 def onClick(event, x, y, flags, pram):
     if(event == cv2.EVENT_LBUTTONDOWN):
         #log.info("Clicked at [ {}, {} ]".format(x,y))
@@ -180,8 +179,8 @@ def preprocessImage(image):
         peri = cv2.arcLength(c, True)
         epsilon = peri * 0.02
         approx = cv2.approxPolyDP(c, epsilon, True)
-        # if the contour has four vertices, then we have found
-        # the thermostat display
+
+        # it's a rectangle
         if len(approx) == 4:
             displayCnt = approx
             cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
@@ -277,7 +276,6 @@ def analyzeDigits(image):
     return result, success
 
 while True:
-    #image = cv2.imread("/home/martin/Dropbox/2021-07-30-173232.jpg")
     image = captureFrame()
     if (image is None):
         log.error("Failed to acquire image")
