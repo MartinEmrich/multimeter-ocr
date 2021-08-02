@@ -33,10 +33,10 @@ CAMERA_FOCUS = 0.35
 DIGIT_VH = [True, False, False, True, False, False, True]
 
 # threshold before edge detection of display window
-PRE_EDGE_THRESHOLD = 150
+PRE_EDGE_THRESHOLD = 135
 
 # threshold of mean for one single segment
-SEGMENT_THRESHOLD_UPPER = 180
+SEGMENT_THRESHOLD_UPPER = 165
 SEGMENT_THRESHOLD_LOWER = 140
 
 ALPHA = 1.50
@@ -85,7 +85,7 @@ DIGITS_LOOKUP = {
 
 # Segment form
 X_STROKE_WIDTH = 24
-X_STROKE_LENGTH = 62
+X_STROKE_LENGTH = 54
 Y_STROKE_WIDTH = 30
 Y_STROKE_LENGTH = 70
 
@@ -224,7 +224,7 @@ def preprocessImage(image):
 
     numContours = len(contours)
 
-    log.debug("got {} contours".format(numContours))
+    #log.debug("got {} contours".format(numContours))
     displayCnt = None
     # loop over the contours
     for c in contours:

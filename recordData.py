@@ -80,7 +80,6 @@ print("Got {}V".format(voltage))
 
 
 totalenergy = 0.0
-ch = "CH2"
 
 datafile = open('log.txt', 'a')
 
