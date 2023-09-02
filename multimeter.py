@@ -23,10 +23,14 @@ log.basicConfig(level=log.DEBUG)
 ########################################
 
 # Video device number
-videoDev = 0
+videoDev = 2
 
+
+CAMERA_FOCUS = 100
 # Camera autofocus value (0.0-1.0)
-CAMERA_FOCUS = 0.35
+(major, minor, _) = cv2.__version__.split(".")
+if major == 3:
+    CAMERA_FOCUS = 0.35
 
 # Segment orientation
 # True: Left-Right, False: Up-Down
@@ -48,7 +52,7 @@ NB_RADIUS = 20
 GLOBAL_X_OFFSET = 0
 GLOBAL_Y_OFFSET = 0
 
-captureDevice = cv2.VideoCapture(videoDev)
+captureDevice = cv2.VideoCapture(videoDev, cv2.CAP_V4L2)
 log.debug("Frame size")
 captureDevice.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 captureDevice.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
@@ -60,7 +64,7 @@ captureDevice.set(cv2.CAP_PROP_AUTOFOCUS, 0)
 captureDevice.set(cv2.CAP_PROP_FOCUS, 0.123)
 captureDevice.set(cv2.CAP_PROP_FOCUS, CAMERA_FOCUS)
 log.debug("Gain")
-captureDevice.set(cv2.CAP_PROP_GAIN, 20)  # 0-255
+captureDevice.set(cv2.CAP_PROP_GAIN, 100)  # 0-255
 log.info("FPS: {}".format(int(captureDevice.get(cv2.CAP_PROP_FPS))))
 
 log.debug("Focus mode: {}".format(captureDevice.get(cv2.CAP_PROP_AUTOFOCUS)))
@@ -106,11 +110,15 @@ def makeDigit(x, y):
     return digit
 
 
+XSC = 1 #0.999
+XOF = 12
+YOF = 31
+
 DIGIT_POS = []
-DIGIT_POS.append(makeDigit(10, 24))
-DIGIT_POS.append(makeDigit(120, 24))
-DIGIT_POS.append(makeDigit(230, 24))
-DIGIT_POS.append(makeDigit(345, 24))
+DIGIT_POS.append(makeDigit(int(XOF), YOF))
+DIGIT_POS.append(makeDigit(int(XOF+XSC*112), YOF))
+DIGIT_POS.append(makeDigit(int(XOF+XSC*224), YOF))
+DIGIT_POS.append(makeDigit(int(XOF+XSC*336), YOF))
 
 KNOB = 2.0
 KD = 0.5
@@ -137,7 +145,8 @@ def si(img, name="image"):
     cv2.imshow(name, img)
     rv = cv2.waitKey(50)
     if rv == 27:
-        sys.exit(0)
+#        sys.exit(0)
+        os._exit(0)
     if chr(rv % 256) == 'q':
         KNOB = KNOB - KD
         log.info("KNOB is now {}".format(KNOB))
@@ -157,10 +166,12 @@ def si(img, name="image"):
         log.info("PRE_EDGE_THRESHOLD is now {}".format(PRE_EDGE_THRESHOLD))
     if chr(rv % 256) == 'a':
         CAMERA_FOCUS = CAMERA_FOCUS - 0.05
+        captureDevice.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         log.info("CAMERA_FOCUS is now {}".format(CAMERA_FOCUS))
         captureDevice.set(cv2.CAP_PROP_FOCUS, CAMERA_FOCUS)
     if chr(rv % 256) == 's':
         CAMERA_FOCUS = CAMERA_FOCUS + 0.05
+        captureDevice.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         log.info("CAMERA_FOCUS is now {}".format(CAMERA_FOCUS))
         captureDevice.set(cv2.CAP_PROP_FOCUS, CAMERA_FOCUS)
     if chr(rv % 256) == 'd':
@@ -266,7 +277,7 @@ def preprocessImage(image):
     # here gray seems to be uint8
     #gray = cv2.convertScaleAbs(gray, alpha=ALPHA, beta=BETA)
 
-    si(gray, "scaled")
+#    si(gray, "scaled")
 
     #gray = cv2.GaussianBlur(gray, (9, 9), 0)
 
