@@ -378,6 +378,10 @@ def getMultimeterValue():
             amps = fixed_first_digit + \
                 result[1]*0.1 + result[2]*0.01 + result[3]*0.001
             # log.info("Current: {}mA".format(1000.0 * amps))
+            if amps == 8.888:
+                log.info("Dropping 8888 display")
+                return None
+            
             return amps
         else:
             log.warn("Incomplete result: {}".format(result))
