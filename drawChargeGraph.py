@@ -21,6 +21,7 @@ timestamps = []
 amps = []
 volts = []
 watthours = []
+watts = []
 totalTime = 0
 maxMilliAmps = 0.0
 maxMilliAmpsTS = None
@@ -43,9 +44,9 @@ while True:
     if start is not None:
         dt = (ts - start).total_seconds()
         totalTime = dt
-        if (i <= 0.0):
-            totalTime = dt
-            break
+#        if (i <= 0.0):
+#            totalTime = dt
+#            break
         timestamps.append( dt / 60.0 )
         amps.append( i)
         if i > maxMilliAmps:
@@ -54,6 +55,7 @@ while True:
 
         volts.append( u )
         watthours.append(E)
+        watts.append(p)
 
 maxMilliAmps = maxMilliAmps * 1000.0
 
@@ -65,12 +67,13 @@ fig, ax = plt.subplots(constrained_layout = True)
 #plt.xlabel("Time (s)")
 #plt.ylabel("A")
 ax.set_xlabel("Time (min), {}:{} min total".format(int(totalTime/60), int(totalTime%60) ))
-ax.plot(timestamps, amps, label="Current ({}mA max)".format(maxMilliAmps), color='tab:red')
+ax.plot(timestamps, amps, label="Current ({}mA max)".format(maxMilliAmps), color='tab:brown')
 
 ax = ax.twinx()
 #plt.ylabel("V")
 #plt.plot(timestamps, volts)
 ax.plot(timestamps, watthours, label="Energy (Wh)", color='tab:blue')
+#ax.plot(timestamps, watts, label="Power (W)", color='tab:red')
 
 fig.tight_layout()
 
