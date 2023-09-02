@@ -19,15 +19,15 @@ class siglentpsu:
     ch = "CH2"
 
     def getPower(self):
-        self.inst.write("MEAS:POWE? " + ch)
+        self.inst.write("MEAS:POWE? " + self.ch)
         return float(self.inst.read())
 
     def getVolt(self):
-        self.inst.write("MEAS:VOLT? " + ch)
+        self.inst.write("MEAS:VOLT? " + self.ch)
         return float(self.inst.read())
 
     def getCurrent(self):
-        self.inst.write("MEAS:CURR? " + ch)
+        self.inst.write("MEAS:CURR? " + self.ch)
         return float(self.inst.read())
 
 
@@ -35,8 +35,8 @@ class siglentscope:
     inst = vxi11.Instrument("192.168.178.120")
     voltParser = re.compile("C([0-9]):PAVA MEAN,([0-9.]+)E([0-9+-]+)V")
 
-    def getVoltsFromScope(self):
-        self.inst.write("C1:PAVA? MEAN")
+    def getVoltsFromScope(self, channel):
+        self.inst.write("C{}:PAVA? MEAN".format(channel))
         rv = self.inst.read()
         match = self.voltParser.search(rv)
         if match is not None:
@@ -74,21 +74,25 @@ class AmpUpdater:
 
 
 scope = siglentscope()
+preDMUChannel = 2
+postDMUChannel = 1
 
-(voltage, channel) = scope.getVoltsFromScope()
-print("Got {}V".format(voltage))
+psu = siglentpsu()
 
+ampSourceIsDMU = False
 
-totalenergy = 0.0
 
 datafile = open('log.txt', 'a')
 
+ampUpdate = None
+if ampSourceIsDMU:
+    ampUpdate = AmpUpdater()
 
+
+totalenergy = 0.0
 startTime = datetime.datetime.now()
 last = startTime
 energy = 0
-ampUpdate = AmpUpdater()
-
 
 def processTick():
     global ampUpdate
@@ -97,8 +101,13 @@ def processTick():
 
     now = datetime.datetime.now()
 
-    (volt, channel) = scope.getVoltsFromScope()
-    current = ampUpdate.get()
+    (volt, channel) = scope.getVoltsFromScope(postDMUChannel)
+    
+    if ampUpdate is not None:
+        current = ampUpdate.get()
+    else:
+        current = psu.getCurrent()
+    
     if current is None:
         log.warning("no valid value from multimeter yet, skipping")
         return
@@ -107,6 +116,7 @@ def processTick():
 
     timediff = now - last
     tickSeconds = timediff.total_seconds()
+    totalSeconds = (now - startTime).total_seconds()
 
     last = now
 
@@ -115,10 +125,11 @@ def processTick():
     totalenergy = totalenergy + energy
 
     timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-    print("{} tick: {:5.2f} seconds, {: >3.3f} Ws ({:3.5f} mWh), {:2.6f}Wh total, currently {:1.3f}W {:1.3f}V {:1.3f}A".format(
-        timestamp, tickSeconds, energyWattSeconds, energy, totalenergy, power, volt, current))
+    print("{} tick: {:5.2f} seconds, {: >5.2f}s total, {:3.5f} mWh/tick, {:2.6f}Wh total, currently {:1.3f}W {:1.3f}V {:1.3f}A".format(
+        timestamp, tickSeconds, totalSeconds, energy, totalenergy, power, volt, current))
     print("{};{};{};{};{};{};{};{}".format(timestamp, tickSeconds,
-                                           energyWattSeconds, energy, totalenergy, power, volt, current), file=datafile)
+                                           energyWattSeconds, totalSeconds, totalenergy, power, volt, current), file=datafile)
+    datafile.flush()
 
 
 sched = BlockingScheduler()
